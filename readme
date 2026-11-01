@@ -1,0 +1,35 @@
+# ISL → English (DeepMind-style keypoints + T5)
+
+```
+video -> MediaPipe keypoints -> conv projector -> T5 encoder-decoder -> English text
+```
+
+## Run order (VS Code terminal)
+
+```bash
+python -m venv .venv && .venv\Scripts\activate      # Windows  (source .venv/bin/activate on Mac/Linux)
+pip install -r requirements.txt
+# for GPU install the CUDA build of torch from pytorch.org first
+
+# 0. download dataset from Kaggle and unzip to e.g. D:/isl_dataset
+python extract_keypoints.py --data D:/isl_dataset --inspect     # check labels look right
+python extract_keypoints.py --data D:/isl_dataset --out features
+
+python train.py --features features --split seen --out runs/seen
+python train.py --features features --split unseen --n-unseen 10 --out runs/unseen
+
+python infer_live.py --ckpt runs/seen/best.pt
+```
+
+## Reading the numbers
+- `exact_acc` / `snapped_acc` on `--split seen` = closed-set accuracy (same 100 sentences, new videos).
+- `--split unseen` = real translation test on sentences never seen. Expect it to be much lower.
+- Report both in your project/LinkedIn post. Without signer IDs the split is not signer-independent.
+
+## If labels look wrong
+`--inspect` prints 8 sample paths with their labels. If your dataset has a CSV (video -> sentence):
+`--csv labels.csv --csv-key <video column> --csv-text <sentence column>`
+
+## Upgrades
+- `--model google/mt5-small` or `google/byt5-small`
+- pretrain on a bigger ISL set (iSign) first, then fine-tune on ISL-CSLTR

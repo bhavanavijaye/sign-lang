@@ -1,0 +1,7 @@
+torch
+transformers>=4.40
+sentencepiece
+sacrebleu
+numpy
+opencv-python
+mediapipe==0.10.14
